@@ -1,276 +1,125 @@
-# How Much Weather Is Enough for Predicting Renewable Grid Share?
+# Data
 
-This project tests how much spatial detail is actually needed when using
-large weather datasets to predict hourly renewable-energy share. It combines
-national electricity data with ERA5 weather and geolocated wind and solar
-capacity across 19 European power systems.
+This directory contains the local inputs and derived hourly datasets used by the
+renewable-share weather-resolution study. The repository does not distribute
+the large raw or derived data files. They can be reconstructed from the
+original providers using the scripts in `scripts/`.
 
-The main experiment compares four ERA5 grid resolutions and two ways of
-averaging weather. The goal is to measure the tradeoff between predictive
-value and the amount of weather data that must be stored, moved, and
-processed.
+## Study coverage
 
-![Weather-added gain versus wind-minus-solar share](figures/paper_placeholders/figure4_gain_vs_wind_minus_solar.png)
+- Period: January 2022 through April 2026
+- Resolution: hourly
+- Systems: 19 European power systems
+- Country codes: `at`, `be`, `bg`, `cz`, `de`, `dk`, `es`, `fr`, `gr`, `hr`,
+  `ie`, `lt`, `lv`, `nl`, `pt`, `ro`, `rs`, `si`, and `sk`
+- Approximately 36,000–38,000 aligned observations are available per country.
+- All 19 systems are modeled. Wind-minus-solar correlation analyses use the 17
+  systems with usable wind and solar observations.
 
-## Main findings
+## Original sources
 
-- Adding weather improved renewable-share prediction in most countries.
-- Weather helped most in wind-heavy power systems. Across the four models,
-  the correlation between weather-added gain and wind share minus solar share
-  ranged from **0.809 to 0.881** across the 17 countries with complete wind
-  and solar observations.
-- Weighting weather toward known wind and solar facility locations
-  outperformed treating all national grid cells equally. Mean improvements
-  were **0.013–0.017 AUC** for classification and **0.043–0.047 R²** for
-  regression.
-- Compared with the 0.25° grid, the 0.5°, 1°, and 2° grids processed
-  approximately **25.9%, 7.0%, and 2.0%** as many weather point-hours.
-  Predictive results remained relatively stable under moderate coarsening.
-- Whole-week block bootstrap results showed clear prediction-error reductions
-  in **14–17 of 19 countries**, depending on the model.
+| Source | Variables used | Role |
+|---|---|---|
+| Fraunhofer ISE Energy-Charts | Hourly national generation by source and load | Renewable-share prediction target |
+| ECMWF/Copernicus ERA5 | 100-m wind, surface solar radiation, and 2-m temperature | Weather predictors |
+| Global Energy Monitor | Locations, technologies, capacities, and commissioning years of known wind and solar facilities | Annual spatial weights |
 
-## Research question
+Data remain subject to the original providers' licenses and terms. Retrieve raw
+data from those providers rather than committing provider downloads to this
+repository.
 
-ERA5 is an HPC-generated global reanalysis. Fine spatial grids increase data
-volume, storage, data movement, memory use, and preprocessing work. This
-project asks:
+## Active post-2022 directories
 
-> How much ERA5 spatial detail is needed to preserve the predictive value of
-> weather for national renewable-share prediction?
+| Directory | Contents | Approximate local size | Commit to GitHub? |
+|---|---|---:|---|
+| `energy_targets_source_by_era/` | Downloaded electricity and load tables | 200 MB | No |
+| `energy_targets_by_era/post/` | Links exposing post-2022 targets to the evaluator | negligible | No |
+| `era5_native_0p25deg/` | Native 0.25-degree country subsets | 8.3 GB | No |
+| `era5_coarse_post_covid/` | Cached 0.25-, 0.5-, 1-, and 2-degree grids | 4.4 GB | No |
+| `capacity_weights_post_by_year/` | Annual facility-weight tables for 2022–2026 | 2.9 MB | Rebuild instead |
+| `capacity_weights_unknown_start_excluded/` | Sensitivity maps excluding unknown commissioning dates | 800 KB | Rebuild instead |
+| `country_weather_post_covid/` | National hourly weather under each grid and weighting configuration | 429 MB | No |
 
-## Data
+Legacy pre-COVID, COVID-period, and HPC-scheduling directories are not used by
+the final post-2022 analysis.
 
-The study covers 19 European power systems from January 2022 through April
-2026. After aligning electricity and weather records and removing missing
-observations, each country contains approximately 36,000–38,000 usable hourly
-records.
+## Main file schemas
 
-### Electricity
+### Electricity targets
 
-Hourly national generation and load were obtained from the
-[Fraunhofer ISE Energy-Charts API](https://api.energy-charts.info/).
-
-The prediction target is renewable generation divided by national load. It is
-evaluated in two forms:
-
-- **Classification:** whether renewable share exceeded 50%.
-- **Regression:** the continuous renewable share of load.
-
-### Weather
-
-Weather variables come from
-[ERA5 hourly data on single levels](https://cds.climate.copernicus.eu/datasets/reanalysis-era5-single-levels?tab=overview):
-
-- 100-m wind speed
-- Surface solar radiation
-- 2-m temperature
-
-ERA5 is evaluated at 0.25°, 0.5°, 1°, and 2° grid resolutions.
-
-### Wind and solar facilities
-
-Facility locations and capacities come from Global Energy Monitor's
-[Global Wind Power Tracker](https://globalenergymonitor.org/projects/global-wind-power-tracker)
-and
-[Global Solar Power Tracker](https://globalenergymonitor.org/projects/global-solar-power-tracker),
-February 2026 releases.
-
-These records are used to weight national weather toward known wind and solar
-facilities. The repository does not redistribute the original tracker
-workbooks; download them from Global Energy Monitor and follow the preparation
-instructions in `data/README.md`.
-
-## Experimental design
-
-The full comparison contains:
-
-- 19 power systems
-- 4 weather-grid resolutions
-- 2 spatial weighting methods
-- 2 classification models
-- 2 regression models
-- 152 weather configurations
-- 608 model evaluations
-
-### Feature sets
-
-**Calendar**
-
-- Hour sine and cosine
-- Month sine and cosine
-- Weekend indicator
-
-**Calendar + weather**
-
-- All calendar features
-- 100-m wind speed
-- Surface solar radiation
-- 2-m temperature
-
-### Models
-
-Classification:
-
-- Logistic regression
-- Random forest
-
-Regression:
-
-- Gradient boosting
-- LightGBM
-
-### Evaluation
-
-Every country uses a chronological split: the first 80% of observations are
-used for training and the final 20% for testing. Data are not shuffled.
-`StandardScaler` is fitted on the training period only.
-
-Classification is evaluated with:
-
-- Area under the ROC curve (AUC)
-- Brier score
-
-Regression is evaluated with:
-
-- Coefficient of determination (R²)
-- Mean absolute error (MAE)
-
-Weather-added gain is the difference between the calendar-only model and the
-calendar-plus-weather model. Positive values always mean that adding weather
-helped.
-
-## Spatial-resolution experiment
-
-Two national weather representations are compared:
-
-- **Facility weighted:** grid cells receive more weight when they contain more
-  known wind or solar capacity.
-- **Uniform:** all national grid cells receive equal weight.
-
-Weather processing is measured using point-hours, preparation time, and peak
-memory. Country, resolution, and weighting configurations are independent and
-can be distributed across CPU cores or cluster array jobs.
-
-## Block bootstrap
-
-The uncertainty analysis resamples 2,000 complete test-set weeks with
-replacement. Complete weeks are used instead of individual hours so that
-related neighboring hours remain together.
-
-For each resample, the analysis recomputes:
-
-- AUC improvement
-- Brier-score reduction
-- R² improvement
-- MAE reduction
-- Cross-country correlation between weather gain and wind-minus-solar share
-
-The bootstrap conditions on the fitted models; it resamples their held-out
-predictions rather than retraining every model.
-
-## Repository organization
+Files are named `weather_energy_merged_<country>.csv`. Important fields include:
 
 ```text
-data/       Data-access instructions and local generated inputs
-figures/    Poster and manuscript figures
-results/    Compact result tables and bootstrap summaries
-scripts/    Data preparation, modeling, bootstrap, and plotting code
+timestamp
+Load
+Wind_onshore / other available wind columns
+Solar
+Renewable_share_of_load
 ```
 
-Large ERA5, Energy-Charts, and generated weather files are intentionally
-excluded from version control.
+Generation columns vary slightly across national systems. The modeling scripts
+standardize the available country columns before evaluation.
 
-## Installation
+### National weather features
 
-Python 3.11 or newer is recommended.
+Files follow names such as:
 
-```bash
-python -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install \
-  numpy pandas scipy scikit-learn lightgbm joblib psutil \
-  matplotlib seaborn xarray dask netCDF4 h5netcdf zarr \
-  fsspec gcsfs cdsapi geopandas pyogrio
+```text
+weather_era5_bg_capacity_1p0deg.csv
+weather_era5_bg_uniform_1p0deg.csv
 ```
 
-## Reproducing the analysis
+Their common schema is:
 
-All scripts anchor paths to the project directory rather than the current
-working directory.
-
-Preview the post-2022 workflow:
-
-```bash
-python scripts/run_era_spatial_resolution.py \
-  --eras post \
-  --resolutions 0.25 0.5 1.0 2.0 \
-  --schemes capacity uniform \
-  --workers 8 \
-  --dry-run
+```text
+timestamp
+wind_speed_100m
+shortwave_radiation
+temperature_2m
 ```
 
-Run the workflow after the required source data are available:
+`capacity` means weather grid cells are weighted toward known wind and solar
+facilities. `uniform` gives included grid cells equal weight.
 
-```bash
-python scripts/run_era_spatial_resolution.py \
-  --eras post \
-  --resolutions 0.25 0.5 1.0 2.0 \
-  --schemes capacity uniform \
-  --workers 8
+### Annual facility weights
+
+Files are stored as `<year>/<country>.csv` with:
+
+```text
+lat
+lon
+wind_mw
+solar_mw
 ```
 
-Run the whole-week bootstrap:
+These tables represent known geolocated facilities, not a complete inventory of
+every distributed or unreported installation.
 
-```bash
-python scripts/bootstrap_post_covid_all_models.py \
-  --n-resamples 2000 \
-  --confidence 0.95 \
-  --workers 8
+## Processing flow
+
+```text
+Energy-Charts generation and load
+                         \
+ERA5 0.25-degree grids -> resolution caches -> national weather features
+                         /
+Annual wind/solar facility weights
+                         |
+                         v
+        chronological classification and regression evaluation
 ```
 
-Regenerate the principal figures:
+Relevant scripts include:
 
-```bash
-python scripts/generate_original_study_figures.py --skip-refit
-python scripts/generate_paper_placeholder_figures.py
-python scripts/plot_post_covid_bootstrap.py \
-  --metric-family error \
-  --formats png pdf
-```
+- `stage_era5_arco.py`
+- `prepare_era5_resolution_cache.py`
+- `import_gem_capacity.py`
+- `run_spatial_resolution_ladder.py`
+- `evaluate_spatial_weather.py`
+- `bootstrap_post_covid_all_models.py`
 
-## Important limitations
+## Repository policy
 
-- ERA5 is a reanalysis, not an operational weather forecast.
-- Facility weighting represents known geolocated utility-scale capacity and
-  does not capture every small or distributed installation.
-- Facility coverage and commissioning dates vary among countries.
-- National load and generation accounting conventions may differ.
-- Ireland and Serbia are modeled but excluded from wind-minus-solar
-  correlations because usable solar observations were unavailable.
-- Bootstrap confidence intervals describe held-out prediction uncertainty
-  conditional on the fitted models; they do not include model-retraining
-  variability.
-
-## Data availability
-
-This repository contains code, derived result tables, and figures. Original
-electricity, ERA5, and facility datasets are not included. Users should obtain
-them directly from Energy-Charts, the Copernicus Climate Data Store, and
-Global Energy Monitor.
-
-## Poster
-
-The final SC26 research-poster PDF will be added under `poster/`.
-
-## AI disclosure
-
-Generative-AI tools assisted with code organization, debugging, figure
-formatting, and wording. The authors reviewed the analysis design, executed
-the experiments, checked the generated results, and are responsible for the
-scientific interpretation.
-
-## Contact
-
-For questions or reproducibility issues, open a GitHub issue in this
-repository.
+Commit this README, analysis scripts, compact result summaries, and final
+figures. Do not commit NetCDF/Zarr weather files, raw provider downloads,
+country-level hourly feature tables, credentials, `.DS_Store`, lock files, or
+machine-specific paths.
