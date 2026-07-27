@@ -188,10 +188,7 @@ Python 3.11 or newer is recommended.
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
-python -m pip install \
-  numpy pandas scipy scikit-learn lightgbm joblib psutil \
-  matplotlib seaborn xarray dask netCDF4 h5netcdf zarr \
-  fsspec gcsfs cdsapi geopandas pyogrio
+python -m pip install -r requirements.txt
 ```
 
 ## Reproducing the analysis
