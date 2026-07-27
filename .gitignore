@@ -1,0 +1,59 @@
+# macOS and Windows
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# API keys and private settings
+.cdsapirc
+.env
+.env.*
+!.env.example
+
+# IDE settings
+.vscode/
+.idea/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.lock
+.ipynb_checkpoints/
+
+# Large weather-data formats
+*.nc
+*.grib
+*.grib2
+*.grb
+*.h5
+*.hdf5
+*.zarr/
+
+# Exclude full local datasets
+data/*
+
+# Keep data documentation and small Denmark samples
+!data/README.md
+!data/sample/
+!data/sample/**
+
+# Large bootstrap draws
+results/**/block_bootstrap_draws.csv.gz
+
+# Local caches
+figures/.cache/
+.cache/
+
+# Old local material
+archive/
+delete/
