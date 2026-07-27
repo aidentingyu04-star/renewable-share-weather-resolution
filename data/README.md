@@ -120,9 +120,3 @@ Relevant scripts include:
 - `evaluate_spatial_weather.py`
 - `bootstrap_post_covid_all_models.py`
 
-## Repository policy
-
-Commit this README, analysis scripts, compact result summaries, and final
-figures. Do not commit NetCDF/Zarr weather files, raw provider downloads,
-country-level hourly feature tables, credentials, `.DS_Store`, lock files, or
-machine-specific paths.
