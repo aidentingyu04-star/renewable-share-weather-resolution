@@ -10,8 +10,6 @@ averaging weather. The goal is to measure the tradeoff between predictive
 value and the amount of weather data that must be stored, moved, and
 processed.
 
-![Weather-added gain versus wind-minus-solar share](figures/paper_placeholders/figure4_gain_vs_wind_minus_solar.png)
-
 ## Main findings
 
 - Adding weather improved renewable-share prediction in most countries.
