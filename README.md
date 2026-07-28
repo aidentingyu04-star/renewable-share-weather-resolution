@@ -1,47 +1,53 @@
 # How Much Weather Is Enough for Predicting Renewable Grid Share?
 
-This project tests how much spatial detail is needed when using large weather
-datasets to predict hourly renewable-energy share. It combines national
-electricity data with ERA5 weather and mapped wind and solar capacity across
-19 European power systems.
+This project studies how much predictive value ERA5 weather adds beyond
+calendar features and how coarsely those weather data can be represented.
+It combines national electricity data with ERA5 weather and mapped wind and
+solar capacity across 19 European power systems.
 
-The main experiment compares four ERA5 grid resolutions and two ways of
-averaging weather. The goal is to measure the tradeoff between predictive
-value and the amount of weather data that must be stored, moved, and processed.
+Fine weather grids increase storage, data movement, and processing: the 0.25°
+grid contains roughly 50 times as many weather point-hours as the 2° grid.
+The project therefore evaluates whether facility-aware, coarser weather data
+can preserve prediction quality with substantially less processing.
 
 ## Main findings
 
-- Weather reduced prediction error on unseen test data in **14–17 of 19
-  countries**, depending on the model and error metric.
-- Weather helped most in wind-heavy power systems. Across the four primary
-  model metrics, the correlation between weather-added gain and wind share
-  minus solar share ranged from **0.809 to 0.881** across the 17 countries
-  with complete wind and solar observations.
-- Capacity weighting improved performance **on average**, but not in every
-  country. Relative to uniform averaging, mean improvements were
-  **0.013–0.017 AUC** and **0.043–0.047 R²** at 0.25° resolution.
-- Compared with 0.25°, the 0.5°, 1°, and 2° grids processed approximately
-  **25.9%, 7.0%, and 2.0%** as many weather point-hours.
-- Moving from 0.25° to 0.5° or 1° changed median weather-added gain by at most
-  **0.003**. Some countries experienced larger losses at 2°.
-- In a high-gain example, Denmark’s gradient-boosting R² increased from
-  **−0.03 to 0.80**, while MAE fell from **28.7 to 11.4 percentage points**.
+- Weather-added gain increased strongly with wind dominance. Across the four
+  primary model metrics, correlations ranged from **0.809 to 0.881** across
+  17 countries with complete wind and solar data. All cross-country 95%
+  confidence intervals excluded zero; random forest produced
+  **r = 0.881 [0.768, 0.913]**.
+- Primary-score improvements were statistically supported in **14–16 of 19
+  countries**, depending on the model. Error reductions were supported in
+  **14–17 countries**.
+- Denmark’s gradient-boosting R² increased from **−0.03 to 0.80**, while MAE
+  fell from **28.7 to 11.4 points**. Ireland’s R² increased from **0.05 to
+  0.92**. Low-wind Latvia, Slovenia, Slovakia, and Serbia gained least.
+- Capacity weighting improved performance on average, but not in every
+  country. At 0.25°, it raised mean AUC by **0.013–0.017** and mean R² by
+  **0.043–0.047** relative to uniform averaging.
+- The 0.5°, 1°, and 2° grids processed **25.9%, 7.0%, and 2.0%** as many
+  point-hours as 0.25°. The 0.5° and 1° grids changed median gain by at most
+  **0.003**, while larger losses appeared at 2°.
+- Overall, sampling weather near renewable facilities mattered more than
+  using the finest possible grid.
 
-## Research question
+## Research questions
 
-ERA5 is a global atmospheric reanalysis produced and processed using
-large-scale computing systems. Fine spatial grids increase storage, data
-movement, memory use, and preprocessing work. This project asks:
+The project asks:
 
-> How much ERA5 spatial detail is needed to preserve the predictive value of
-> weather for national renewable-share prediction?
+1. How much accuracy do ERA5 wind speed, solar radiation, and temperature add
+   beyond calendar features?
+2. Can weather-added gain be explained by a country’s wind-versus-solar mix?
+3. How far can weather resolution be coarsened, and does weighting weather
+   toward generation facilities matter more than grid fineness?
 
 ## Data
 
 The study covers 19 European power systems from January 2022 through April
 2026. After aligning electricity and weather records and removing missing
-observations, each country contains approximately 36,000–38,000 usable hourly
-records.
+observations, each country contains approximately 36,085–37,943 usable hourly 
+observations per country.
 
 ### Electricity
 
