@@ -45,9 +45,7 @@ The project asks:
 ## Data
 
 The study covers 19 European power systems from January 2022 through April
-2026. After aligning electricity and weather records and removing missing
-observations, each country contains approximately 36,085–37,943 usable hourly 
-observations per country.
+2026. Each country contains 36,085–37,943 usable hourly observations after alignment and missing-data removal.
 
 ### Electricity
 
